@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  django:
+    build: backend
+    volumes:
+      - ./backend:/app:cached
+    working_dir: /app
+    ports:
+      - "8000:8000"
