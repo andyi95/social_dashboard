@@ -18,7 +18,16 @@ class TelegramAPI:
     def get_chat(self, name: str = ''):
         entity = self.client.get_entity(name)
         messages = self.client.get_messages(entity.id)
+        return messages
+
+    def get_channel(self, name=''):
+        entity = self.client.get_entity(name)
+        return entity
 
     def get_chats(self):
         chats = self.client.get_dialogs()
         return chats
+
+    def __del__(self):
+        print('going disconnect')
+        self.client.disconnect()

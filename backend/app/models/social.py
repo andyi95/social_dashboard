@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey
 from sqlalchemy.types import Date, String, Text, SmallInteger, Integer
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from sqlalchemy import Index
 
 
 class Account(Base):
@@ -21,11 +22,13 @@ class Account(Base):
 
 class Group(Base):
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    group_id = Column(Integer, default=0)
+    name = Column(String(512))
     screen_name = Column(String(255))
     is_closed = Column(Boolean, default=False)
     description = Column(Text)
     contact_id = Column(Integer, )
+    social_media_type = Column(String(255), default='vk')
 
     def __repr__(self):
         return f'Group {self.screen_name} id {self.id}'
@@ -35,7 +38,7 @@ class Post(Base):
     id = Column(Integer, primary_key=True)
     post_id = Column(Integer, index=True)
     owner_id = Column(Integer, ForeignKey('group.id'), index=True)
-    date = Column(DateTime, comment='Publication timestamp in MSC tz')
+    date = Column(DateTime, comment='Publication timestamp in MSC tz', index=True)
     marked_as_ads = Column(Boolean, default=False)
     post_type = Column(String)
     text = Column(Text)
@@ -74,8 +77,8 @@ class Comment(Base):
 class PostWord(Base):
     id = Column(Integer, autoincrement=True, index=True, primary_key=True)
     word = Column(String(length=255), )
-    post_id = Column(Integer, ForeignKey('post.id'))
-    date = Column(Date, comment='Publication date of original post in MSC tz')
+    post_id = Column(Integer, ForeignKey('post.id'), index=True)
+    date = Column(Date, comment='Publication date of original post in MSC tz', index=True)
     count = Column(Integer, default=1)
     post = relationship(Post, primaryjoin=post_id == Post.id, foreign_keys=Post.id)
 
