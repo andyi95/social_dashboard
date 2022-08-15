@@ -1,7 +1,7 @@
 <template>
-<button class="btn btn-primary">
+<n-button>
   <slot>Button</slot>
-</button>
+</n-button>
 </template>
 
 <script>

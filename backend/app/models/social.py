@@ -35,7 +35,7 @@ class Group(Base):
 
 
 class Post(Base):
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, index=True)
     owner_id = Column(Integer, ForeignKey('group.id'), index=True)
     date = Column(DateTime, comment='Publication timestamp in MSC tz', index=True)
@@ -76,7 +76,7 @@ class Comment(Base):
 
 class PostWord(Base):
     id = Column(Integer, autoincrement=True, index=True, primary_key=True)
-    word = Column(String(length=255), )
+    word = Column(String(length=255), index=True)
     post_id = Column(Integer, ForeignKey('post.id'), index=True)
     date = Column(Date, comment='Publication date of original post in MSC tz', index=True)
     count = Column(Integer, default=1)

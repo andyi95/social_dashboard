@@ -1,8 +1,7 @@
 <template>
-<div class="ms-2 me-auto">
-  {{ title }}
-</div>
-  <span class="badge bg-primary rounded-pill">{{ text }}</span>
+  <n-card :title="title">
+    {{ text }}
+  </n-card>
 </template>
 
 <script>

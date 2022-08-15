@@ -7,7 +7,6 @@
 </template>
 
 <script>
-import LoginButton from "@/components/LoginButton";
 import BaseButton from "@/components/BaseButton";
 import BaseInput from "@/components/BaseInput";
 import {api} from "@/helpers";
@@ -17,8 +16,7 @@ export default {
   name: "LoginView",
   components: {
     BaseInput,
-    BaseButton,
-    LoginButton
+    BaseButton
   },
   methods:{
     login() {
@@ -29,5 +27,4 @@ export default {
     }
   }
 }
-
 </script>

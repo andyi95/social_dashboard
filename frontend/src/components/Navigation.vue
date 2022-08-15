@@ -20,14 +20,6 @@ const navlinks = [
           to: {name: 'TopWords'}
         }, {default: () => 'Анализ слов'}
     )
-  },  {
-    key: 'about',
-    label: () => h(
-        RouterLink,
-        {
-          to: {name: 'About'}
-        }, {default: () => 'Что-то будет'}
-    )
   },
   {
     key: 'WordCharts',
