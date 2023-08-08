@@ -13,7 +13,6 @@ class TelegramAPI:
         app_id = os.getenv('TELEGRAM_APP_ID')
         app_secret = os.getenv('TELEGRAM_APP_SECRET')
         self.client = TelegramClient('client', int(app_id), app_secret)
-        self.client.start()
 
     def get_chat(self, name: str = ''):
         entity = self.client.get_entity(name)

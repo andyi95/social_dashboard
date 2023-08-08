@@ -1,0 +1,35 @@
+[tool.aerich]
+tortoise_orm = "app.core.config.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
+[tool.poetry]
+name = "social-dashboard"
+version = "0.1.0"
+description = ""
+authors = ["Andrey Chernikov"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.100"
+pandas = "^2.0"
+telethon = "^1.25"
+fastapi-jwt-auth = "^0.5.0"
+tortoise-orm = "^0.19.3"
+asyncpg = "^0.28.0"
+python-dotenv = "^1.0.0"
+python-dateutil = "^2.8.2"
+requests = "^2.31.0"
+uvicorn = "^0.23.2"
+nltk = "^3.8.1"
+pymorphy2 = "^0.9.1"
+pymorphy2-dicts-ru = "^2.4.417127.4579844"
+celery = "^5.3.1"
+redis = "^4.6.0"
+aioredis = "^2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

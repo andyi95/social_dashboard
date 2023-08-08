@@ -1,86 +1,69 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey
-from sqlalchemy.types import Date, String, Text, SmallInteger, Integer
-from sqlalchemy.orm import relationship
-from app.db.base import Base
-from sqlalchemy import Index
+from datetime import datetime
+
+from tortoise import fields
+from tortoise.models import Model
 
 
-class Account(Base):
-    id = Column(Integer, primary_key=True)
-    first_name = Column(String(255))
-    last_name = Column(String(255))
-    deactivated = Column(Boolean, default=False)
-    is_closed = Column(Boolean, default=True)
-    about = Column(String, nullable=True)
-    activities = Column(Text, nullable=True)
-    bdate = Column(DateTime, nullable=True)
-    last_seen = Column(DateTime, nullable=True)
-
-    def __repr__(self):
-        return f'Account id {self.id}, {self.first_name} {self.last_name}'
+class Account(Model):
+    first_name = fields.CharField(max_length=255, default='')
+    last_name = fields.CharField(max_length=255, default='')
+    deactivated = fields.BooleanField(default=False)
+    about = fields.TextField(null=True, default=None)
+    activities = fields.TextField(null=True)
+    bdate = fields.DatetimeField(null=True)
+    last_seen = fields.DatetimeField(null=True)
 
 
-class Group(Base):
-    id = Column(Integer, primary_key=True)
-    group_id = Column(Integer, default=0)
-    name = Column(String(512))
-    screen_name = Column(String(255))
-    is_closed = Column(Boolean, default=False)
-    description = Column(Text)
-    contact_id = Column(Integer, )
-    social_media_type = Column(String(255), default='vk')
-
-    def __repr__(self):
-        return f'Group {self.screen_name} id {self.id}'
+class Group(Model):
+    group_id = fields.IntField(default=0)
+    name = fields.CharField(max_length=255)
+    screen_name = fields.CharField(max_length=512)
+    is_closed=fields.BooleanField(default=False)
+    description = fields.TextField()
+    contact_id = fields.IntField()
+    social_media_type = fields.CharField(max_length=255, description='тип соц. сети')
+    posts: fields.ReverseRelation['Post']
 
 
-class Post(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(Integer, index=True)
-    owner_id = Column(Integer, ForeignKey('group.id'), index=True)
-    date = Column(DateTime, comment='Publication timestamp in MSC tz', index=True)
-    marked_as_ads = Column(Boolean, default=False)
-    post_type = Column(String)
-    text = Column(Text)
-    likes_count = Column(Integer)
-    repost_count = Column(Integer)
-    views_count = Column(Integer)
-    comment_count = Column(Integer)
-
-    group = relationship('Group')
-
-    def __repr__(self):
-        return f'Post id {self.post_id}: {self.text[:31]}'
-
-
-class Comment(Base):
-    id = Column(Integer, primary_key=True)
-    from_id = Column(
-        Integer, ForeignKey('account.id'), comment='ID of comment author', nullable=True
+class Post(Model):
+    post_id = fields.IntField(index=True)
+    date = fields.DatetimeField(name='Publication timestamp in MSC tz', index=True)
+    marked_as_ads = fields.BooleanField(default=False)
+    post_type = fields.CharField(max_length=255)
+    text = fields.TextField()
+    group: fields.ForeignKeyRelation[Group] = fields.ForeignKeyField(
+        'models.Group', related_name='posts'
     )
-    post_id = Column(Integer, ForeignKey('post.id'))
-    owner_id = Column(
-        Integer, ForeignKey('group.id'), index=True,
-        comment='ID of group feed with the comment'
+
+    def __str__(self):
+        return f'Post {self.post_id} from {datetime.date(self.date)}'
+
+
+class Comment(Model):
+    author: fields.ForeignKeyRelation[Account] = fields.ForeignKeyField(
+        'models.Account', related_name='comments'
     )
-    date = Column(DateTime, comment='Publication timestamp in MSC tz')
-    text = Column(Text)
+    post: fields.ForeignKeyRelation[Post] = fields.ForeignKeyField(
+        'models.Post', related_name='comments'
+    )
 
-    post = relationship(Post, primaryjoin=post_id == Post.post_id, foreign_keys=Post.post_id)
-    author = relationship(Account, primaryjoin=from_id == Account.id, post_update=True)
-    group = relationship('Group')
+class PostStats(Model):
+    post: fields.ForeignKeyRelation[Post] = fields.ForeignKeyField(
+        'models.Post', related_name='stats'
+    )
+    likes_count = fields.IntField()
+    repost_count = fields.IntField()
+    views_count = fields.IntField()
+    comment_count = fields.IntField()
 
-    def __repr__(self):
-        return f'Comment id {self.id}: {self.text[:31]}'
 
+class PostWord(Model):
+    word = fields.CharField(max_length=255)
+    date = fields.DateField()
+    count = fields.SmallIntField()
+    post: fields.ForeignKeyRelation[Post] = fields.ForeignKeyField(
+        'models.Post', related_name='words'
+    )
 
-class PostWord(Base):
-    id = Column(Integer, autoincrement=True, index=True, primary_key=True)
-    word = Column(String(length=255), index=True)
-    post_id = Column(Integer, ForeignKey('post.id'), index=True)
-    date = Column(Date, comment='Publication date of original post in MSC tz', index=True)
-    count = Column(Integer, default=1)
-    post = relationship(Post, primaryjoin=post_id == Post.id, foreign_keys=Post.id)
-
-    def __repr__(self):
-        return f'Word {self.word} in post {self.post}'
+    def __str__(self):
+        return f'Word {self.word} count {self.count} from {self.post}'
