@@ -8,9 +8,9 @@ import sys
 
 import pymorphy3
 from nltk.corpus import stopwords
-from django.db.models import Q, F, Count
 import re
 morph = pymorphy3.MorphAnalyzer()
+
 
 class PostParser:
     def __init__(self, post: 'Post'):
@@ -60,19 +60,6 @@ class PostParser:
                 new_words.append(new_word)
         return new_words
 
-    # @staticmethod
-    # def replace_numbers(words):
-    #     """Replace all interger occurrences in list of tokenized words with textual representation"""
-    #     p = inflect.engine()
-    #     new_words = []
-    #     for word in words:
-    #         if word.isdigit():
-    #             new_word = p.number_to_words(word)
-    #             new_words.append(new_word)
-    #         else:
-    #             new_words.append(word)
-    #     return new_words
-
     def parse(self):
         content = re.sub(r"http\S+", ' ', self.post.text)
         content = nltk.wordpunct_tokenize(content)
@@ -105,19 +92,12 @@ if __name__ == '__main__':
     if 'setup' in dir(django):
         django.setup()
     from dashboard.models import Post, PostWord
-
-    PostWord.objects.filter(post__date__gt=date(2023, 5, 1)).all().delete()
-    # qs = Post.objects.filter(Q(words__isnull=True) & ~Q(text='')).order_by('id').all()[:1000]
     instances = []
-    qs = Post.objects.filter(text__iregex=r'\w*[a-zA-Z]\w*').order_by('-id').all()
-    j = 0
+    qs = Post.objects.filter(text__iregex=r'\w*[a-zA-Z]\w*', words__isnull=True).order_by('-id').all()
     for i, post in enumerate(qs):
-        if post.words.exists():
-            continue
         parser = PostParser(post)
         instances.extend(parser.parse())
         if len(instances) > 1000:
             print('creating 1000 words. Last one is ' + str(instances[-1]))
             PostWord.objects.bulk_create(instances)
-
-
+            instances = []

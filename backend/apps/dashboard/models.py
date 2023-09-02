@@ -6,7 +6,7 @@ class Account(models.Model):
     last_name = models.CharField(max_length=255, blank=True, null=True)
     deactivated = models.BooleanField(blank=True, null=True)
     is_closed = models.BooleanField(blank=True, null=True)
-    about = models.CharField(blank=True, null=True)
+    about = models.CharField(max_length=255, blank=True, null=True)
     activities = models.TextField(blank=True, null=True)
     bdate = models.DateTimeField(blank=True, null=True)
     last_seen = models.DateTimeField(blank=True, null=True)
@@ -17,7 +17,7 @@ class Account(models.Model):
 
 
 class Group(models.Model):
-    name = models.CharField(blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     screen_name = models.CharField(max_length=255, blank=True, null=True)
     is_closed = models.BooleanField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -33,9 +33,9 @@ class Group(models.Model):
 class Post(models.Model):
     post_id = models.IntegerField(blank=True, null=True)
     group = models.ForeignKey(Group, models.DO_NOTHING, blank=True, null=True, related_name='posts')
-    date = models.DateTimeField(blank=True, null=True, db_comment='Publication timestamp in MSC tz')
+    date = models.DateTimeField(blank=True, null=True, verbose_name='Publication timestamp in MSC tz')
     marked_as_ads = models.BooleanField(blank=True, null=True)
-    post_type = models.CharField(blank=True, null=True)
+    post_type = models.CharField(max_length=32, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
     likes_count = models.IntegerField(blank=True, null=True)
     repost_count = models.IntegerField(blank=True, null=True)
@@ -56,7 +56,7 @@ class PostStats(models.Model):
     repost_count = models.IntegerField()
     views_count = models.IntegerField()
     comment_count = models.IntegerField()
-    post = models.ForeignKey(Post, models.DO_NOTHING)
+    post = models.ForeignKey(Post, models.DO_NOTHING, related_name='stats')
 
     class Meta:
         managed = False
@@ -68,7 +68,7 @@ class PostStats(models.Model):
 class PostWord(models.Model):
     word = models.CharField(max_length=255, blank=True, null=True)
     post = models.ForeignKey(Post, models.DO_NOTHING, blank=True, null=True, related_name='words')
-    date = models.DateField(blank=True, null=True, db_comment='Publication date of original post in MSC tz')
+    date = models.DateField(blank=True, null=True, verbose_name='Publication date of original post in MSC tz')
     count = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -79,10 +79,15 @@ class PostWord(models.Model):
         return f'Слово {self.word} кол. {self.count} дата {self.date}'
 
 class Comment(models.Model):
-    from_field = models.ForeignKey(Account, models.DO_NOTHING, db_column='from_id', blank=True, null=True, db_comment='ID of comment author')  # Field renamed because it was a Python reserved word.
+    from_field = models.ForeignKey(Account, models.DO_NOTHING, db_column='from_id', blank=True, null=True,
+                                   verbose_name='ID of comment author')  # Field renamed because it was a Python
+    # reserved
+    # word.
     post = models.ForeignKey('Post', models.DO_NOTHING, blank=True, null=True)
-    owner = models.ForeignKey('Group', models.DO_NOTHING, blank=True, null=True, db_comment='ID of group feed with the comment')
-    date = models.DateTimeField(blank=True, null=True, db_comment='Publication timestamp in MSC tz')
+    owner = models.ForeignKey('Group', models.DO_NOTHING, blank=True, null=True, verbose_name='ID of group feed with '
+                                                                                             'the '
+                                                                                     'comment')
+    date = models.DateTimeField(blank=True, null=True, verbose_name='Publication timestamp in MSC tz')
     text = models.TextField(blank=True, null=True)
 
     class Meta:

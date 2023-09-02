@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from dashboard.models import Post, PostWord
+from apps.dashboard.models import Post, PostWord
 
 
 class PostFilter(filters.FilterSet):

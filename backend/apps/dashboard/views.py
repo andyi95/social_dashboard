@@ -2,9 +2,9 @@ from django.db.models import Q, QuerySet, Max, Min, Count, Sum
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from dashboard.filters import PostFilter
-from dashboard.models import Post, PostWord
-from dashboard.serializers import DetailStatSerializer, WordStatSerializer
+from apps.dashboard.filters import PostFilter
+from apps.dashboard.models import Post, PostWord
+from apps.dashboard.serializers import DetailStatSerializer, WordStatSerializer
 from services.worker import collect_tg_posts
 
 class PostViewSet(viewsets.ModelViewSet):

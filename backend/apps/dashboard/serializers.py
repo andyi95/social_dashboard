@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from dashboard.models import PostWord, Post
+from apps.dashboard.models import PostWord, Post
 
 
 class WordStatSerializer(serializers.Serializer):

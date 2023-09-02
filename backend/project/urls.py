@@ -5,7 +5,7 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 api_patterns = [
-    path('', include('dashboard.urls'))
+    path('', include('apps.dashboard.urls'))
 ]
 
 urlpatterns = [

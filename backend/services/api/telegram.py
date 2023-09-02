@@ -12,10 +12,6 @@ class TelegramAPI:
     def __init__(self):
         app_id = os.getenv('TELEGRAM_APP_ID')
         app_secret = os.getenv('TELEGRAM_APP_SECRET')
-        # with TelegramClient('client', int(app_id), app_secret) as client:
-        #     client.loop.run_until_complete(client.send_message('me', 'Hello, myself!'))
-        #     self.client = client
-        #     a = 1
         self.client = TelegramClient('client', int(app_id), app_secret)
 
     def get_chat(self, name: str = ''):

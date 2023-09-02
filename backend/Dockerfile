@@ -9,9 +9,9 @@ WORKDIR /app
 RUN apt update && apt install curl -y
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-#COPY poetry.lock pyproject.toml /app/
-#
-#RUN poetry install --no-interaction
+COPY poetry.lock pyproject.toml /app/
+
+RUN poetry install --no-interaction
 
 COPY . .
 

@@ -2,6 +2,7 @@ import json
 import os
 import random
 from dataclasses import dataclass
+from datetime import datetime
 
 import requests
 from collections import namedtuple
@@ -48,8 +49,9 @@ class Group:
 
     def get_posts(self, offset: int = 0, count: int = 100):
         url = self.api.base_url + 'wall.get'
+        id = self.id if self.id.startswith('-') else '-' + self.id
         params = {
-            'owner_id': self.id, 'offset': offset, 'count': count
+            'owner_id': id, 'offset': offset, 'count': count
         } | self.api.params
         response = self.api.get_object(url, params)
         response = response['response']['items']
@@ -57,7 +59,7 @@ class Group:
         for item in response:
             posts.append(Post(
                 id=item.get('id', ''), from_id=item.get('from_id'), post_type=item.get('post_type'), text=item.get('text'),
-                date=item.get('date'), likes_count=item.get('likes', {}).get('count'),
+                date=datetime.fromtimestamp(item.get('date')), likes_count=item.get('likes', {}).get('count'),
                 comments_count=item.get('comments', {}).get('count'), repost_count=item.get('reposts', {}).get('count'),
                 owner_id=item.get('owner_id', self.id)
             ))
@@ -67,7 +69,8 @@ class Group:
 class VkAPI:
     def __init__(self, access_token: str = ''):
         self.access_token = access_token if access_token else os.getenv('VK_API_TOKEN')
-        self.app_id = os.getenv('VK_API_ID')
+        self.app_id = os.getenv('VK_APP_ID')
+        self.app_secret = os.getenv('VK_APP_SECRET')
         self.session = requests.Session()
         self.base_url = f'https://api.vk.com/method/'
         self.version = '5.131'
@@ -75,6 +78,35 @@ class VkAPI:
             'client_id': self.app_id, 'access_token': self.access_token,
             'v': self.version
         }
+    def get_oauth_url(
+        self,
+        redirect_uri: Optional[str] = 'https://api.vk.com/blank.html',
+        group_id: Optional[str] = ''
+    ) -> str:
+        url = 'https://oauth.vk.com/authorize?'
+        scopes = ('wall', 'groups', 'email')
+        params = {
+            'client_id': self.app_id, 'display': 'page',
+            'redirect_uri': redirect_uri, 'scope': ','.join(scopes),
+            'response_type': 'code', 'v': self.version
+        }
+        if group_id:
+            params['group_ids'] = group_id
+        return url + urlencode(params)
+
+    def exchange_auth_code(
+        self, auth_code: str,
+        redirect_uri: str = 'https://api.vk.com/blank.html'
+    ) -> dict:
+        """Обменять код авторизации на полноценный токен доступа."""
+
+        url = 'https://oauth.vk.com/access_token?'
+        params = {
+            'client_id': self.app_id, 'client_secret': self.app_secret,
+            'redirect_uri': redirect_uri, 'code': auth_code
+        }
+        response = self.session.get(url, params=params)
+        return response.json()
 
     def validate_response(self, response):
         if error := response.get('error'):
@@ -115,6 +147,6 @@ class VkAPI:
             raise APIException(f'Unexpected type of response: {response}')
         response = response['response'][0]
         return Group(
-            id=response['id'], name=response['name'], screen_name=response['screen_name'], is_closed=response['is_closed'],
+            id=str(response['id']), name=response['name'], screen_name=response['screen_name'], is_closed=response['is_closed'],
             description=response['description'], api=self
         )

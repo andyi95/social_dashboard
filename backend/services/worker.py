@@ -2,6 +2,7 @@ import asyncio
 
 import os
 import sys
+import time
 
 from telethon.errors import UsernameInvalidError
 
@@ -67,21 +68,53 @@ async def process_groups(api = None, dialogs = None):
         await get_group(api, item.name)
 
 
-async def parse_vk(api: VkAPI, group_ids = None):
+def parse_vk(api: VkAPI, group_ids = None):
     group_ids = os.getenv('GROUP_IDS', group_ids)
     for group_id in group_ids.split(','):
-        group = api.get_group(group_id)
-        if not group:
+        v_group = api.get_group(group_id)
+        if not v_group:
             continue
+        g_dict = {
+            'name': v_group.name,
+            'screen_name': v_group.screen_name,
+            'social_media_type': 'vk',
+            'is_closed': v_group.is_closed,
+            'description': v_group.description
+        }
+        group, _ = Group.objects.get_or_create(group_id=v_group.id, **g_dict)
+        Group.objects.filter(group_id=v_group.id).update(**g_dict)
+        for i in range(0, 100):
+            v_posts = v_group.get_posts(i * 100)
+            for v_post in v_posts:
+                post, _ = Post.objects.get_or_create(
+                    post_id=v_post.id, group=group
+                )
+                post.date = v_post.date
+                post.marked_as_ads = v_post.marked_as_ads
+                post.text = v_post.text
+                post.likes_count = v_post.likes_count
+                post.views_count = v_post.views_count
+                post.comment_count = v_post.comments_count
+                post.save()
+            print(f'Got {i} batch. Last post {str(post)}')
+            time.sleep(0.1)
 
 
 @shared_task
 def collect_tg_posts():
+    api = TelegramAPI()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    api = TelegramAPI()
-
     loop.run_until_complete(process_groups(api))
+    # loop.run_until_complete(process_groups(api))
+
+def collect_vk_posts():
+    api = VkAPI()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    # api = TelegramAPI()
+    loop.run_until_complete(parse_vk(api))
+
 
 if __name__ == '__main__':
     sys.path.extend(['C:\\dev\\social_dashboard_django', 'C:\\dev\\social_dashboard_django\\backend',

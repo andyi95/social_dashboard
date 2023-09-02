@@ -23,26 +23,38 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'corsheaders',
+    'django_extensions',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'drf_spectacular',
 
-    'dashboard.apps.DashboardConfig',
-    'user.apps.UserConfig'
+    'apps.dashboard.apps.DashboardConfig',
+    'apps.user.apps.UserConfig',
+    'apps.social_networks.apps.SocialNetworksConfig',
 ]
-
+NOTEBOOK_ARGUMENTS = [
+    '--ip', '0.0.0.0',
+    '--port', '8888',
+]
+IPYTHON_KERNEL_DISPLAY_NAME = 'Django Kernel'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CORS_ORIGIN_WHITELIST = [
+    'http://google.com',
+    'http://hostname.example.com',
+    'http://localhost:4000',
+    'http://127.0.0.1:8000'
+]
 ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
@@ -67,9 +79,9 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'NAME': os.getenv('DB_NAME', 'dashboard-tortoise'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT', default=5432)
     }
