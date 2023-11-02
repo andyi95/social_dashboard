@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.dashboard.models import PostWord, Post
+from apps.dashboard.models import PostWord, Post, Group
 
 
 class WordStatSerializer(serializers.Serializer):
@@ -7,6 +7,21 @@ class WordStatSerializer(serializers.Serializer):
     count = serializers.IntegerField()
     post_id = serializers.IntegerField()
     date = serializers.DateField()
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+
+class PostSerializer(serializers.ModelSerializer):
+    group = GroupSerializer()
+    class Meta:
+        model = Post
+        fields = '__all__'
+
+
 
 
 class DetailStatSerializer(serializers.Serializer):

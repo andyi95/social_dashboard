@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from apps.dashboard.models import Post, PostWord, Account, Group
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('post_id', 'group', 'date', 'post_type')
+

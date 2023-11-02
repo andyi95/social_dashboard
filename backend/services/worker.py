@@ -6,6 +6,9 @@ import time
 
 from telethon.errors import UsernameInvalidError
 
+from django.conf import settings
+from django.utils import timezone
+
 from services.api import TelegramAPI, VkAPI
 from telethon.tl.patched import Message
 from telethon.tl.types import User
@@ -63,7 +66,8 @@ async def get_group(api: TelegramAPI, channel_name: str = ''):
 
 
 async def process_groups(api = None, dialogs = None):
-    await api.client.connect()
+    if not api.client.is_connected():
+        api.client.start()
     async for item in api.client.iter_dialogs():
         await get_group(api, item.name)
 
@@ -85,18 +89,20 @@ def parse_vk(api: VkAPI, group_ids = None):
         Group.objects.filter(group_id=v_group.id).update(**g_dict)
         for i in range(0, 100):
             v_posts = v_group.get_posts(i * 100)
+            if not v_posts:
+                break
             for v_post in v_posts:
                 post, _ = Post.objects.get_or_create(
                     post_id=v_post.id, group=group
                 )
-                post.date = v_post.date
+                post.date = timezone.make_aware(v_post.date, timezone=timezone.get_current_timezone())
                 post.marked_as_ads = v_post.marked_as_ads
                 post.text = v_post.text
                 post.likes_count = v_post.likes_count
                 post.views_count = v_post.views_count
                 post.comment_count = v_post.comments_count
                 post.save()
-            print(f'Got {i} batch. Last post {str(post)}')
+            print(f'Got {i} batch. Last post {post}')
             time.sleep(0.1)
 
 
@@ -117,7 +123,7 @@ def collect_vk_posts():
 
 
 if __name__ == '__main__':
-    sys.path.extend(['C:\\dev\\social_dashboard_django', 'C:\\dev\\social_dashboard_django\\backend',
+    sys.path.extend(['C:\\dev\\social_dashboard', 'C:\\dev\\social_dashboard\\backend',
                      'C:\\Program Files\\JetBrains\\PyCharm 2022.3.2\\plugins\\python\\helpers\\pycharm',
                      'C:\\Program Files\\JetBrains\\PyCharm 2022.3.2\\plugins\\python\\helpers\\pydev'])
 
@@ -125,5 +131,6 @@ if __name__ == '__main__':
     import django
     if 'setup' in dir(django):
         django.setup()
-    from dashboard.models import Post, PostWord, Group, PostStats
-    collect_tg_posts()
+    from apps.dashboard.models import Post, PostWord, Group, PostStats
+    # collect_tg_posts()
+    collect_vk_posts()

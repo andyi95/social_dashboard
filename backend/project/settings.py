@@ -29,10 +29,14 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'drf_spectacular',
+    'tinymce',
+    'djoser',
+    'debug_toolbar',
 
     'apps.dashboard.apps.DashboardConfig',
     'apps.user.apps.UserConfig',
     'apps.social_networks.apps.SocialNetworksConfig',
+    'apps.content.apps.ContentConfig',
 ]
 NOTEBOOK_ARGUMENTS = [
     '--ip', '0.0.0.0',
@@ -42,6 +46,7 @@ IPYTHON_KERNEL_DISPLAY_NAME = 'Django Kernel'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -49,10 +54,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+    'host.docker.internal'
+]
 CORS_ORIGIN_WHITELIST = [
     'http://google.com',
     'http://hostname.example.com',
     'http://localhost:4000',
+    'http://localhost:3000',
     'http://127.0.0.1:8000'
 ]
 ROOT_URLCONF = 'project.urls'
@@ -111,7 +122,7 @@ AUTH_USER_MODEL = 'user.User'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -136,8 +147,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'PAGE_SIZE': 10
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 500,
 }
+DJOSER = {
+    'LOGIN_FIELD': 'email'
+}
+STATIC_ROOT = 'static'
 
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')

@@ -68,7 +68,7 @@ class Group:
 
 class VkAPI:
     def __init__(self, access_token: str = ''):
-        self.access_token = access_token if access_token else os.getenv('VK_API_TOKEN')
+        self.access_token = access_token if access_token else os.getenv('VK_API_KEY')
         self.app_id = os.getenv('VK_APP_ID')
         self.app_secret = os.getenv('VK_APP_SECRET')
         self.session = requests.Session()
