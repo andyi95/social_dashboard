@@ -9,6 +9,7 @@ api_patterns = [
     path('', include('djoser.urls')),
     path('', include('djoser.urls.authtoken')),
     path('', include('apps.content.urls')),
+    path('', include('apps.social_networks.urls')),
     # path('', include('apps.user.'))
 ]
 

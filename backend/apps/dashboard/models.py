@@ -1,58 +1,6 @@
-"""
-Your project sounds interesting! Let's address your concerns step by step.
-
-1. **Finding Words That Appear in All Posts from a Particular Group:**
-
-   One way to identify these words is by making use of Django's ORM querying capabilities:
-
-   ```python
-   from django.db.models import Count
-
-   group_id = <some_group_id>
-   total_posts_in_group = Post.objects.filter(group_id=group_id).count()
-
-   # Filtering words that appear in all posts
-   frequently_appearing_words = PostWord.objects.filter(post__group_id=group_id) \
-       .values('word') \
-       .annotate(post_count=Count('post', distinct=True)) \
-       .filter(post_count=total_posts_in_group)
-   ```
-
-   This will give you the words that appear in all posts of a particular group. If these words are not meaningful to your analysis, you can consider removing them just like stop words.
-
-2. **Ideas for More In-depth Analysis:**
-
-   - **Topic Modeling**: Use Latent Dirichlet Allocation (LDA) to identify the main topics present in the posts. Libraries like `gensim` are great for this. This can give you an idea of what subjects are frequently discussed in the posts.
-
-   - **Sentiment Analysis**: By making use of libraries like TextBlob or NLTK's Vader, you can get a sentiment score for each post, allowing you to understand if the post has a positive, negative, or neutral sentiment.
-
-   - **Word Embeddings**: Using models like Word2Vec, you can convert words into vectors and find similar words or even find semantic relations between words.
-
-   - **Trending Topics**: Identify trending words/topics over time. This can be done by plotting word frequency against time.
-
-   - **Clustering**: Use `scikit-learn` to cluster posts based on their content. This can help in grouping similar posts together.
-
-   - **Predictive Models**: If you have some labeled data or can generate some, you could build models to predict certain post characteristics, like predicting if a post will get a high number of likes based on its content.
-
-   - **Time Series Analysis**: Since you're storing `date` for each word, you can perform time series analysis to identify trends, seasonality, etc., in word usage.
-
-3. **Other Suggestions**:
-
-   - **Improved Text Cleaning**: Apart from removing stop words, consider handling things like emojis, URLs, mentions, and hashtags which might be frequent in social media posts.
-
-   - **Named Entity Recognition (NER)**: Using libraries like `spaCy`, you can extract entities like person names, organizations, locations, etc., from the posts. This can give you insights into which entities are being talked about the most.
-
-   - **TF-IDF Analysis**: Instead of just counting word frequency, consider using Term Frequency-Inverse Document Frequency (TF-IDF) to find out which words are important in a post relative to all posts.
-
-   - **Expand Stop Words**: Based on the frequently appearing words and the context of your data (e.g., if you're scraping a specific platform or in a specific niche), you might want to expand your list of stop words.
-
-Remember, the kind of analysis you can perform largely depends on the nature of your data and what insights you're aiming to extract. Always ensure you have the right to scrape and analyze the data, respecting user privacy and platform terms of service.
-
-"""
-
-
 from django.db import models
-
+from django.db.models.functions import Lower, Substr
+from django.utils import timezone
 
 class Account(models.Model):
     first_name = models.CharField(max_length=255, blank=True, null=True)
@@ -65,8 +13,10 @@ class Account(models.Model):
     last_seen = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'account'
+        verbose_name = 'Social Media Account'
+        ordering = ('first_name', 'last_name')
 
 
 class Group(models.Model):
@@ -79,8 +29,17 @@ class Group(models.Model):
     social_media_type = models.CharField(max_length=255, blank=True, null=True, verbose_name='тип соц. сети')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'group'
+        verbose_name = 'Social Media Group'
+        ordering = ('name', 'id')
+
+    def __str__(self):
+        return self.name
+
+class PostQuerySet(models.QuerySet):
+    def with_short_text(self):
+        return self.annotate(short_text=Substr('text', 1, 100))
 
 
 class Post(models.Model):
@@ -94,10 +53,13 @@ class Post(models.Model):
     repost_count = models.IntegerField(blank=True, null=True)
     views_count = models.IntegerField(blank=True, null=True)
     comment_count = models.IntegerField(blank=True, null=True)
+    tags = models.ManyToManyField('Tag', related_name='posts', blank=True)
+    objects = PostQuerySet.as_manager()
 
     class Meta:
-        managed = False
         db_table = 'post'
+        verbose_name = 'Social Media Post'
+        ordering = ('date', 'id')
 
     def __str__(self):
         return f'Пост от {self.date.date()} текст {self.text[:20]}'
@@ -108,11 +70,17 @@ class PostStats(models.Model):
     repost_count = models.IntegerField()
     views_count = models.IntegerField()
     comment_count = models.IntegerField()
-    post = models.ForeignKey(Post, models.DO_NOTHING, related_name='stats')
+    post = models.ForeignKey(Post, models.DO_NOTHING, related_name='stats', blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'poststats'
+        verbose_name = 'Social Media Post Stats'
+        ordering = ('created_at', 'id')
+
+    def __str__(self):
+        return f'stats for post {self.post}'
 
 
 class PostWord(models.Model):
@@ -122,11 +90,13 @@ class PostWord(models.Model):
     count = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'postword'
+        verbose_name = 'Word in Social Media Post'
 
     def __str__(self):
         return self.word
+
 
 
 class Comment(models.Model):
@@ -140,5 +110,20 @@ class Comment(models.Model):
     text = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'comment'
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=64, verbose_name='tag')
+    description = models.TextField(verbose_name='tag description')
+
+    class Meta:
+        verbose_name = 'post tag'
+        verbose_name_plural = 'tags'
+        constraints = [
+            models.UniqueConstraint(Lower('name'), 'name', name='unique_lower_name')
+        ]
+
+    def __str__(self):
+        return self.name

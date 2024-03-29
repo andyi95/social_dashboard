@@ -13,5 +13,7 @@ COPY poetry.lock pyproject.toml /app/
 
 RUN poetry install --no-interaction
 
+RUN poetry run python -m nltk.downloader universal_tagset omw-1.4 stopwords wordnet averaged_perceptron_tagger
+
 COPY . .
 

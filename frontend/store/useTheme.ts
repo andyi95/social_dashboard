@@ -5,7 +5,7 @@ import {defineStore} from "pinia";
 const osTheme = useOsTheme()
 export const useTheme = defineStore('theme', {
     state: () => {
-        return {themeType: osTheme}
+        return {themeType: 'light'}
     },
     actions: {
         doToggleTheme(){
@@ -14,7 +14,8 @@ export const useTheme = defineStore('theme', {
     },
     getters: {
         theme: state => state.themeType
-    }
+    },
+    persist: true
 })
 
 // export default {useTheme};

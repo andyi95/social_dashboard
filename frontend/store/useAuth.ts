@@ -1,34 +1,36 @@
 import { defineStore } from 'pinia';
-import {User} from '~/models/User';
+import {User, AuthParams} from '~/models/User';
 
 
-const useAuth = defineStore('auth-store', function () {
-    const router = useRouter();
-    // const userData = useCookie<User | undefined>(USER_COOKIE_NAME, {default: () => undefined, path: '/'});
+const useAuth = defineStore('auth',  {
+    state: () => ({
+                      user: null as User | null,
+        token: null as string | null,
+        isLoading: true
+                  }),
+    actions: {
+        async login({email, password}: AuthParams) {
+            const {data} = await useMyFetch('token/login', {
+                body: {
+                    email: email,
+                    password: password
+                },
+                method: 'POST'
+            });
 
-    // async function doLogin(email: string, password: string) {
-    //     const {data} = $fetch('/token/login', {
-    //         email,
-    //         password
-    //     });
-    //
-    //     if (data) {
-    //         userData.value = unref(data);
-    //     }
-    // }
+            if (data && data.auth_token) {
+                this.token = data.value.auth_token;
+            }
+        },
+        async me() {
+            const {data} = await useMyFetch('users/me');
 
-    function doLogout() {
-        // userData.value = undefined;
-        router.push('/sign-in');
-    }
-
-
-    return {
-        // doLogin,
-        doLogout,
-        // user: computed(() => userData.value?.user),
-        // accessToken: computed(() => userData.value?.token.token)
-    };
+            if (data) {
+                this.user = data.value;
+            }
+        }
+    },
+    persist: true
 });
 
 export default useAuth;

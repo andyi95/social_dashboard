@@ -1,7 +1,6 @@
 <template>
-        <NH2>Projects</NH2>
         <NMenu
-            :options="menuOptions"
+            :options="menuOptions" mode="horizontal"
             @update:value="clickMenuItem"
         />
 </template>
@@ -11,7 +10,7 @@ import type {MenuOption, MenuDividerOption, MenuGroupOption} from 'naive-ui';
 import {NH2, NMenu, NInput} from 'naive-ui';
 import {NuxtLink} from "#components";
 import {h} from "vue";
-
+import useAuth from "~/store/useAuth";
 type MenuOptions = (MenuOption | MenuDividerOption | MenuGroupOption)[];
 
 export default defineComponent({
@@ -51,7 +50,15 @@ export default defineComponent({
                   to: {name: 'index'}
                 }, {default: () => 'Main'}
             )
-          },
+          }
+            // {label: 'Облако слов', key: 'WordCloud'}
+            ]
+      function clickMenuItem(key: string){
+        console.log(key)
+      }
+      const auth = useAuth();
+      if (!auth.token){
+        menuOptions.push(
           {
             key: 'login',
             label: () => h(
@@ -60,11 +67,7 @@ export default defineComponent({
                   to: {name: 'login'}
                 }, {default: () => 'Вход'}
             )
-          }
-            // {label: 'Облако слов', key: 'WordCloud'}
-            ]
-      function clickMenuItem(key: string){
-        console.log(key)
+          })
       }
       return {menuOptions, clickMenuItem}
 

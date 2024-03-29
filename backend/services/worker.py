@@ -85,24 +85,37 @@ def parse_vk(api: VkAPI, group_ids = None):
             'is_closed': v_group.is_closed,
             'description': v_group.description
         }
-        group, _ = Group.objects.get_or_create(group_id=v_group.id, **g_dict)
-        Group.objects.filter(group_id=v_group.id).update(**g_dict)
+        qs = Group.objects.filter(group_id=v_group.id, social_media_type='vk')
+        if qs:
+            qs.update(**g_dict)
+            group = qs.first()
+        else:
+            group = Group.objects.create(group_id=v_group.id, **g_dict)
+        post = None
+        print(f'Processing group {group}')
         for i in range(0, 100):
             v_posts = v_group.get_posts(i * 100)
             if not v_posts:
                 break
             for v_post in v_posts:
-                post, _ = Post.objects.get_or_create(
+                post, created = Post.objects.get_or_create(
                     post_id=v_post.id, group=group
                 )
-                post.date = timezone.make_aware(v_post.date, timezone=timezone.get_current_timezone())
-                post.marked_as_ads = v_post.marked_as_ads
-                post.text = v_post.text
-                post.likes_count = v_post.likes_count
-                post.views_count = v_post.views_count
-                post.comment_count = v_post.comments_count
-                post.save()
-            print(f'Got {i} batch. Last post {post}')
+                if not created:
+                    stats = PostStats.objects.create(
+                        likes_count=v_post.likes_count, repost_count=v_post.repost_count,
+                        views_count=v_post.views_count, comment_count=v_post.comments_count,
+                        post=post
+                    )
+                else:
+                    post.date = timezone.make_aware(v_post.date, timezone=timezone.get_current_timezone())
+                    post.marked_as_ads = v_post.marked_as_ads
+                    post.text = v_post.text
+                    post.likes_count = v_post.likes_count
+                    post.views_count = v_post.views_count
+                    post.comment_count = v_post.comments_count
+                    post.save()
+            print(f'Got {i} batch. created: {created} Last post {post}')
             time.sleep(0.1)
 
 
@@ -116,10 +129,11 @@ def collect_tg_posts():
 
 def collect_vk_posts():
     api = VkAPI()
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
     # api = TelegramAPI()
-    loop.run_until_complete(parse_vk(api))
+    parse_vk(api)
+    # loop.run_until_complete(parse_vk(api))
 
 
 if __name__ == '__main__':

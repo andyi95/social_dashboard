@@ -36,6 +36,12 @@ class Post:
     comments_count: int
     views_count: int = 0
     marked_as_ads: bool = False
+    api: 'VkAPI' = None
+
+    def get_comments(self, offset: int = 0, count: int = 100):
+        url = self.api.base_url + 'wall.getComments'
+        id = self.id if self.id.startswith('-') else '-' + self.id
+
 
 
 @dataclass
@@ -61,7 +67,7 @@ class Group:
                 id=item.get('id', ''), from_id=item.get('from_id'), post_type=item.get('post_type'), text=item.get('text'),
                 date=datetime.fromtimestamp(item.get('date')), likes_count=item.get('likes', {}).get('count'),
                 comments_count=item.get('comments', {}).get('count'), repost_count=item.get('reposts', {}).get('count'),
-                owner_id=item.get('owner_id', self.id)
+                owner_id=item.get('owner_id', self.id), api=self.api
             ))
         return posts
 
@@ -78,6 +84,7 @@ class VkAPI:
             'client_id': self.app_id, 'access_token': self.access_token,
             'v': self.version
         }
+
     def get_oauth_url(
         self,
         redirect_uri: Optional[str] = 'https://api.vk.com/blank.html',
@@ -150,3 +157,9 @@ class VkAPI:
             id=str(response['id']), name=response['name'], screen_name=response['screen_name'], is_closed=response['is_closed'],
             description=response['description'], api=self
         )
+
+    def get_scopes(self):
+        url = self.base_url + 'apps.getScopes'
+        params = self.params
+        response = self.session.get(url, params=params).json()
+        return response['response']

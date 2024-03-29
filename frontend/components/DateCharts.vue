@@ -10,7 +10,7 @@ import {onMounted, ref} from "vue";
 function extractDate(items) {
   return  {
     dates: items.map(a => a.date).reverse(),
-    counts: items.map(a => a.ratio).reverse()
+    counts: items.map(a => a.post_count).reverse()
   }
 
 }
@@ -85,8 +85,21 @@ export default {
     words: {
       handler: function (newData) {
         let transformed = extractDate(newData)
-        this.option.xAxis.data = transformed.dates
-        this.option.series.data = transformed.counts
+            let options = {
+              xAxis: {
+                data: transformed.dates
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [
+                {
+                  data: transformed.counts,
+                  type: 'line'
+                }
+              ]
+            }
+        this.option = options
         this.chart.clear()
         this.chart.setOption(this.option)
 
@@ -97,7 +110,7 @@ export default {
   mounted() {
     this.initChart()
   },
-
+  //
   // setup(props) {
   //   const dateCharts = ref(HTMLElement | null);
   //
@@ -116,20 +129,7 @@ export default {
   //     }
   //     window.addEventListener('resize', resizeListen)
   //     const transformed = extractDate(props.words)
-  //     let options = {
-  //       xAxis: {
-  //         data: transformed.dates
-  //       },
-  //       yAxis: {
-  //         type: 'value'
-  //       },
-  //       series: [
-  //         {
-  //           data: transformed.counts,
-  //           type: 'line'
-  //         }
-  //       ]
-  //     }
+
   //     myChart.setOption(options);
   //   })
   // },

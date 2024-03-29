@@ -46,6 +46,7 @@ class Token(models.Model):
     class Meta:
         verbose_name = 'Access token'
         verbose_name_plural = 'Access tokens'
+        ordering = ('-expires_at', )
 
     def __str__(self):
         return {self.token}

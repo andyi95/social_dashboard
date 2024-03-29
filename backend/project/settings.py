@@ -11,7 +11,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = bool(strtobool(os.getenv('DJANGO_DEBUG', default='True')))
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split()
-
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -33,15 +34,25 @@ INSTALLED_APPS = [
     'djoser',
     'debug_toolbar',
 
+
     'apps.dashboard.apps.DashboardConfig',
     'apps.user.apps.UserConfig',
     'apps.social_networks.apps.SocialNetworksConfig',
     'apps.content.apps.ContentConfig',
 ]
+try:
+    import jupyterlab
+    NOTEBOOK_DEFAULT_URL = '/lab'  # Using JupyterLab
+except ImportError:
+    NOTEBOOK_DEFAULT_URL = '/tree'  # Using Jupyter
+NOTEBOOK_DIR = BASE_DIR / "notebooks"
 NOTEBOOK_ARGUMENTS = [
     '--ip', '0.0.0.0',
     '--port', '8888',
+'--notebook-dir', NOTEBOOK_DIR,
+    '--NotebookApp.default_url', NOTEBOOK_DEFAULT_URL,
 ]
+
 IPYTHON_KERNEL_DISPLAY_NAME = 'Django Kernel'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -147,8 +158,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 500,
+    'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.CustomPagination',
+    'PAGE_SIZE': 10,
 }
 DJOSER = {
     'LOGIN_FIELD': 'email'
@@ -161,3 +172,4 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_IGNORE_RESULT = True
+OPENAI_KEY = os.getenv('OPENAI_KEY')

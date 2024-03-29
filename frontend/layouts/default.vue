@@ -1,40 +1,36 @@
 <template>
   <div>
-    <NLayout position="absolute">
-      <NLayoutHeader bordered position="absolute" class="h-[50px] flex items-center justify-between px-4">
-            <ButtonLink to="/">
-              <div class="flex items-center">
-                <div class="text-3xl font-extrabold tracking-widest m-0">
-                  SM
-                </div>
-              </div>
-            </ButtonLink>
-          <div class="ml-auto">
-            <NButton @click="doToggleTheme">{{ themeType === 'light' ? 'Dark' : 'Light' }}</NButton>
-          </div>
+    <NLayout>
+      <NLayoutHeader bordered class="bg-white px-15 border-b bc-eee flex items-center h-[60]">
+            <NButton @click="themeStore.doToggleTheme">{{ themeStore.themeType === 'light' ? 'Dark' : 'Light' }}</NButton>
+<NavBar/>
       </NLayoutHeader>
-
-      <NLayout position="absolute" class="layout top-[50px]" has-sider>
-        <NLayoutSider bordered class="pr-px">
-          <div class="px-3">
-            <slot name="sidebar">
-              <NAlert type="error"> SliderForgotten! </NAlert>
-            </slot>
-          </div>
-        </NLayoutSider>
-        <NLayoutContent>
-          <div class="p-5 space-y-4">
+      <NLayoutContent class="flex-1 overflow-hidden px-3 min-h-100">
             <slot />
-          </div>
-        </NLayoutContent>
-      </NLayout>
+      </NLayoutContent>
     </NLayout>
   </div>
 </template>
+<style>
+body, #app, .n-layout-scroll-container, .n-config-provider, .n-layout--static--positioned{
+  min-height: 100vh;
+}
 
+#app {
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  /*height: 100%;*/
+
+}
+.n-layout-scroll-container{
+  padding-left: .75rem;
+  padding-right: .75rem;
+  padding-top: .50rem;
+  padding-bottom: .25rem;
+}
+</style>
 
 <script>
-import {NLayout, NButton, NLayoutHeader, NLayoutContent, NLayoutSider, NAlert} from 'naive-ui';
+import {NLayout, NButton, NLayoutHeader, NLayoutContent, NLayoutSider, NAlert, useMessage} from 'naive-ui';
 import ButtonLink from '../components/ButtonLink';
 import {useTheme} from '~/store/useTheme';
 
@@ -49,12 +45,9 @@ export default defineComponent({
     NLayout
   },
   setup() {
-    const {doToggleTheme, theme, themeType} = useTheme();
-
+    const themeStore = useTheme();
     return {
-      doToggleTheme,
-      theme,
-      themeType,
+      themeStore,
       randomPhrase: computed(() => {
         const all = [
             'social media',
@@ -64,6 +57,7 @@ export default defineComponent({
         return all[Math.floor(Math.random() * all.length)];
       })
     };
-  }
+  },
+
 });
 </script>

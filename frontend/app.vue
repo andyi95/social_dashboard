@@ -8,15 +8,15 @@
   </NConfigProvider>
 </template>
 <script setup lang="ts">
-import {NMessageProvider, NConfigProvider, NDialogProvider, ruRU, dateRuRU} from 'naive-ui';
+import {NMessageProvider, NConfigProvider, NDialogProvider, ruRU, dateRuRU, darkTheme, useMessage} from 'naive-ui';
 import {useTheme} from "~/store/useTheme";
 // import {useTheme} from 'store/useTheme.ts'
   // components: {NMessageProvider, NConfigProvider, NDialogProvider},
   // setup(){
-const theme = useTheme();
-    // return {theme}
-  // }
-// })
+const themeStore = useTheme();
+const theme = computed(() => {
+  return themeStore.$state.themeType === 'dark' ? darkTheme : null;
+});
 
 
 </script>

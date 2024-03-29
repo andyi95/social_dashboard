@@ -9,7 +9,15 @@ class WordStatSerializer(serializers.Serializer):
     date = serializers.DateField()
 
 
+class PostNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = '__all__'
+
+
 class GroupSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Group
         fields = '__all__'
@@ -17,11 +25,10 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     group = GroupSerializer()
+
     class Meta:
         model = Post
         fields = '__all__'
-
-
 
 
 class DetailStatSerializer(serializers.Serializer):

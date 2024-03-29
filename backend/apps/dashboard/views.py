@@ -1,25 +1,36 @@
 from django.db.models import Q, QuerySet, Max, Min, Count, Sum
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins
+from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from apps.dashboard.filters import PostFilter
-from apps.dashboard.models import Post, PostWord
-from apps.dashboard.serializers import DetailStatSerializer, WordStatSerializer, PostSerializer
+from apps.dashboard.filters import PostFilter, StatsFilter
+from apps.dashboard.models import Post, PostWord, Group
+from apps.dashboard.serializers import DetailStatSerializer, WordStatSerializer, PostSerializer, GroupSerializer
 from services.worker import collect_tg_posts
 
-import time
+
 class PostsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Post.objects.select_related('group').all()
     serializer_class = PostSerializer
+    filterset_class = PostFilter
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ['date', 'likes_count', 'views_count', 'comment_count']
 
-    def dispatch(self, request, *args, **kwargs):
-        time.sleep(1)
-        return super().dispatch(request, *args, **kwargs)
+    @action(methods=['get'], detail=True)
+    def comments(self, request, pk=None, **kwargs):
+        return Response()
+
+
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
 
 
 class PostStatsViewSet(viewsets.ModelViewSet):
     queryset = PostWord.objects.all()
-    filterset_class = PostFilter
+    filterset_class = StatsFilter
+
     lookup_url_kwarg = 'word'
 
     def get_serializer_class(self):
@@ -40,6 +51,8 @@ class PostStatsViewSet(viewsets.ModelViewSet):
         qs = PostWord.objects.filter(word=word).values('date').annotate(
             post_count=Count('post')
         ).order_by('-date')
+        if 'limit' in request.query_params:
+            qs = qs[:int(request.query_params['limit'])]
         serializer = DetailStatSerializer(qs, many=True, read_only=True)
         return Response(serializer.data)
 
