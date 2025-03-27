@@ -2,3 +2,4 @@ services:
   backend:
     image: ${CI_REGISTRY_IMAGE}/backend:${TAG:-latest}
     restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
