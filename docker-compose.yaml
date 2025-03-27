@@ -6,5 +6,10 @@ services:
     volumes:
       - ./backend:/app:cached
     working_dir: /app
-    ports:
-      - "8000:8000"
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: stage.Dockerfile
