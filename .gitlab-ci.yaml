@@ -1,0 +1,60 @@
+
+.docker_build: &docker-build
+    variables:
+        GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAME/$CI_COMMIT_REF_NAME
+        GIT_STRATEGY: 'pull'
+        GIT_CHECKOUT: 'true'
+        GIT_CLEAN_FLAGS: 'none'
+        GIT_DEPTH: 0
+    stage: build
+    tags:
+        - docker
+    before_script:
+        - apk update && apk add git
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - |
+            if [ -n "$(git tag --points-at HEAD)" ]; then
+              export APP_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+            else
+              export APP_VERSION=$(git rev-parse --short HEAD)
+            fi
+            export COMPOSE_FILE=docker-compose.yaml:docker-compose.stage.yaml
+        - app/stage/vars $CI_COMMIT_REF_SLUG
+    only:
+        refs:
+            - dev
+            - development
+            - master
+            - merge_requests
+            - rc
+
+
+build:frontend:
+    <<: *docker-build
+    script:
+        - TAG=${CI_COMMIT_SHORT_SHA} docker compose build --no-cache frontend
+        - TAG=${CI_COMMIT_REF_NAME} docker compose build frontend
+        - TAG=${CI_COMMIT_SHORT_SHA} docker compose push frontend
+        - TAG=${CI_COMMIT_REF_NAME} docker compose push frontend
+
+build:backend:
+    <<: *docker-build
+    script:
+        - echo $GAPP_CREDENTIALS_BASE64 | base64 -d > backend/gcloud-service-key.json
+        - export GOOGLE_APPLICATION_CREDENTIALS=/app/gcloud-service-key.json
+        - TAG=${CI_COMMIT_SHORT_SHA} docker compose build backend
+        - TAG=${CI_COMMIT_REF_NAME} docker compose build backend
+        - TAG=${CI_COMMIT_SHORT_SHA} docker compose push backend
+        - TAG=${CI_COMMIT_REF_NAME} docker compose push backend
+
+
+test:backend:
+    stage: test
+    tags:
+        - docker
+    script:
+        - app/stage/test backend
+    after_script:
+        - docker compose down
+    needs:
+        - build:backend
