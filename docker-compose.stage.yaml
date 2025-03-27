@@ -1,0 +1,4 @@
+services:
+  backend:
+    image: ${CI_REGISTRY_IMAGE}/backend:${TAG:-latest}
+    restart: unless-stopped
