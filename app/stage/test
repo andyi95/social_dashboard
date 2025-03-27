@@ -1,0 +1,46 @@
+#!/bin/sh
+
+apk update && apk add curl
+if [ -f ".env.dist" ]; then
+    source .env.dist
+else
+    echo ".env.dist file not found"
+    exit 1
+fi
+
+# Define additional variables
+export COMPOSE_FILE="docker-compose.yaml:docker-compose.stage.yaml"
+export COMPOSE_PROJECT_NAME="reader-test"
+export APP_VERSION=${APP_VERSION:-latest}
+export DEPLOYMENT_HOST="reader-test.home.andyi95.com"
+# Create or clear the .env file
+> .env
+
+# Function to add a variable to the .env file
+add_to_env() {
+    echo "$1='$2'" >> .env
+}
+
+# Add variables from .env.dist to .env
+while IFS='=' read -r key value; do
+    add_to_env "$key" "$value"
+done < .env.dist
+
+# Add the additional variables to .env
+add_to_env "COMPOSE_FILE" "docker-compose.yaml:docker-compose.stage.yaml"
+add_to_env "COMPOSE_PROJECT_NAME" "social-dashboard"
+add_to_env "APP_VERSION" ${APP_VERSION:-latest}
+add_to_env "DEPLOYMENT_HOST" "social-dashboard.home.andyi95.com"
+
+docker compose up -d
+sleep 3
+CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' reader-test-nginx-1)
+docker compose ps
+if [ $(docker compose ps -q | wc -l) -ne $(docker compose config --services | wc -l) ]; then
+    echo "Not all containers are running."
+    docker compose ps
+    exit 1
+fi
+HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" $CONTAINER_IP:80)
+
+echo "HTTP status code: $HTTP_STATUS"
