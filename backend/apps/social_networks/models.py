@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import TimeStamptedModel
 
@@ -27,6 +28,10 @@ class Account(models.Model):
     user = models.ForeignKey(
         'user.User', on_delete=models.CASCADE, related_name='accounts'
     )
+    account_id = models.CharField(
+        max_length=255, default='', blank=True, verbose_name='social media account id'
+    )
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = 'social network'
@@ -42,6 +47,7 @@ class Token(models.Model):
         Account, on_delete=models.CASCADE, related_name='tokens'
     )
     type = models.CharField(max_length=16, choices=TokenType.choices, default=TokenType.ACCESS)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = 'Access token'

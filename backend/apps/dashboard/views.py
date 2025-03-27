@@ -27,7 +27,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
 
 
-class PostStatsViewSet(viewsets.ModelViewSet):
+class PostStatsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PostWord.objects.all()
     filterset_class = StatsFilter
 
@@ -43,7 +43,8 @@ class PostStatsViewSet(viewsets.ModelViewSet):
         qs = qs.values('word').annotate(
             post_id=Max('post_id'), count=Sum('count'), date=Max('date')
         ).order_by('-count')
-        qs = self.filter_queryset(qs)[:100]
+        limit = int(self.request.query_params['limit']) if 'limit' in self.request.query_params else 100
+        qs = self.filter_queryset(qs)[:limit]
         serializer = WordStatSerializer(qs, many=True, read_only=True, context=self.get_serializer_context())
         return Response(serializer.data)
 

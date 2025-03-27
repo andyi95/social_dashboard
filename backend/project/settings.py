@@ -160,6 +160,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.CustomPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'apps.core.drf.BrowsableAPIRendererWithoutForms'
+    ],
+    'HTML_SELECT_CUTOFF': 10
 }
 DJOSER = {
     'LOGIN_FIELD': 'email'

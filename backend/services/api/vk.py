@@ -15,6 +15,23 @@ load_dotenv()
 
 User = namedtuple('User', 'id username first_name last_name link')
 
+
+@dataclass
+class User:
+    id: int
+    username: str
+    first_name: str
+    last_name: str
+    link: str = ''
+    api: 'VkAPI' = None
+
+    def get_groups(self):
+        url = self.api.base_url + 'groups.get'
+        params = self.api.params
+        response = self.api.get_object(url, params)
+        return response['response']['items']
+
+
 @dataclass
 class Comment:
     id: str
@@ -91,7 +108,8 @@ class VkAPI:
         group_id: Optional[str] = ''
     ) -> str:
         url = 'https://oauth.vk.com/authorize?'
-        scopes = ('wall', 'groups', 'email')
+        redirect_uri = 'blank.html'
+        scopes = ('wall', 'groups', 'email', 'messages')
         params = {
             'client_id': self.app_id, 'display': 'page',
             'redirect_uri': redirect_uri, 'scope': ','.join(scopes),
@@ -138,6 +156,16 @@ class VkAPI:
         if error := response.get('error'):
             raise APIException(f'Error fetching API: {error}')
         return response
+
+    def get_me(self):
+        url = self.base_url + 'users.get'
+        params = self.params | {'fields': 'screen_name'}
+        t = self.get_object(url, params)
+        return User(
+            id=t['response'][0]['id'], username=t['response'][0]['screen_name'],
+            first_name=t['response'][0]['first_name'], last_name=t['response'][0]['last_name'], api=self
+        )
+
 
     def get_group(self, group_id: str = ''):
         url = self.base_url + 'groups.getById'
